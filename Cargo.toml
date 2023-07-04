@@ -15,6 +15,7 @@ documentation = "https://docs.rs/magnum-opus"
 
 [features]
 linux-pkg-config = ["dep:pkg-config"]
+msys2-pkg-config = ["dep:pkg-config"]
 
 [build-dependencies]
 target_build_utils = "0.3"
