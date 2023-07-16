@@ -17,6 +17,5 @@ documentation = "https://docs.rs/magnum-opus"
 linux-pkg-config = ["dep:pkg-config"]
 
 [build-dependencies]
-target_build_utils = "0.3"
 bindgen = "0.59"
 pkg-config = { version = "0.3.27", optional = true }
