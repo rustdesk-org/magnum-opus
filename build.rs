@@ -3,17 +3,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[cfg(all(target_os = "linux", feature = "linux-pkg-config"))]
-fn link_pkg_config(name: &str) -> Vec<PathBuf> {
-    let lib = pkg_config::probe_library(name)
-        .expect(format!(
-            "unable to find '{name}' development headers with pkg-config (feature linux-pkg-config is enabled).
-            try installing '{name}-dev' from your system package manager.").as_str());
-
-    lib.include_paths
-}
-
-#[cfg(not(all(target_os = "linux", feature = "linux-pkg-config")))]
 fn link_vcpkg(mut path: PathBuf, name: &str) -> PathBuf {
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
     let mut target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
@@ -56,7 +45,7 @@ fn link_vcpkg(mut path: PathBuf, name: &str) -> PathBuf {
     include
 }
 
-#[cfg(not(all(target_os = "linux", feature = "linux-pkg-config")))]
+#[cfg(not(target_os = "linux"))]  // macOS-only; panics if called elsewhere
 fn link_homebrew_m1(name: &str) -> PathBuf {
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
     let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
@@ -107,12 +96,22 @@ fn link_homebrew_m1(name: &str) -> PathBuf {
     include
 }
 
-#[cfg(all(target_os = "linux", feature = "linux-pkg-config"))]
+#[cfg(target_os = "linux")]
 fn find_package(name: &str) -> Vec<PathBuf> {
-    return link_pkg_config(name);
+    if let Ok(lib) = pkg_config::probe_library(name) {
+        return lib.include_paths;
+    }
+    if let Ok(vcpkg_root) = std::env::var("VCPKG_ROOT") {
+        return vec![link_vcpkg(vcpkg_root.into(), name)];
+    }
+    panic!(
+        "unable to find '{}': pkg-config failed and VCPKG_ROOT is not set. \
+        Install the '{}-dev' package or set VCPKG_ROOT.",
+        name, name
+    )
 }
 
-#[cfg(not(all(target_os = "linux", feature = "linux-pkg-config")))]
+#[cfg(not(target_os = "linux"))]
 fn find_package(name: &str) -> Vec<PathBuf> {
     if let Ok(vcpkg_root) = std::env::var("VCPKG_ROOT") {
         vec![link_vcpkg(vcpkg_root.into(), name)]
