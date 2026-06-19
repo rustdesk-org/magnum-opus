@@ -14,9 +14,9 @@ repository = "https://github.com/DuckerMan/magnum-opus"
 documentation = "https://docs.rs/magnum-opus"
 
 [features]
-linux-pkg-config = ["dep:pkg-config"]
+linux-pkg-config = []  # no-op; kept for backward compatibility
 
 [build-dependencies]
 target_build_utils = "0.3"
 bindgen = "0.59"
-pkg-config = { version = "0.3.27", optional = true }
+pkg-config = "0.3.27"
